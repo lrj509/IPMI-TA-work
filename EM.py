@@ -23,11 +23,18 @@ class EM:
         deviation. This is an implimentation of the Equasion 
         found: https://en.wikipedia.org/wiki/Normal_distribution
 
-        @param value:   Query value
-        @param mean:    The mean of the distribution
-        @param std:     The standard deviation of the distribution
+        @param value:   
+                Query value
 
-        @returns        The PDF value at the query value. 
+        @param mean:    
+                The mean of the distribution
+
+        @param std:     
+                The standard deviation of the distribution
+
+
+        @returns        
+                The PDF value at the query value. 
         """
 
         first_part = 1/(std * math.sqrt(2*math.pi))
@@ -45,23 +52,26 @@ class EM:
         image pixels most likely belong to, given the current 
         means (averages) and their relevent standard deviations. 
 
-        @param image:   A numpy array containing the image pixel 
-                        values as a 2D array. 
-        @param number_of_classes:  The number of classes to segment 
-                        the image into. 
-        @param averages: a tuple containing the current means
-        @param stds:    A tuple containing the current standard 
-                        deviations. 
+        @param image:   
+                A numpy array containing the image pixel values
+                as a 2D array. 
 
-        @returns expectation_vector: A numpy vector containing 
-                        the current most likely pixel classes 
-                        for each pixel. 
+        @param number_of_classes:  
+                The number of classes to segment the image into. 
+
+        @param averages: 
+                A tuple containing the current means
+
+        @param stds:    
+                A tuple containing the current standard deviations. 
+
+
+        @returns
+                A numpy vector containing the current most likely 
+                pixel classes for each pixel. 
         """
 
-        image_shape = np.shape(image)
-        image_area = image_shape[0] * image_shape[1]
-
-        image_vector = image.reshape(image_area) #/ 256
+        image_vector = image.reshape(image.shape[0]*image.shape[1])
 
         expectation_vector = np.zeros(image_vector.shape[0])
 
@@ -69,12 +79,19 @@ class EM:
             
             current_prob = 0
             current_class = None
-            for class_num in range(number_of_classes):     
-                if EM._GaussianEquasion(pixel, averages[class_num], stds[class_num]) > current_prob:
+
+            for class_num in range(number_of_classes):    
+
+                query_pdf = EM._GaussianEquasion(pixel, 
+                    averages[class_num], 
+                    stds[class_num]) 
+
+                if query_pdf > current_prob:
+
                     current_class = class_num
-                    current_prob = EM._GaussianEquasion(pixel, averages[class_num], stds[class_num])
-            expectation_vector[key] = current_class
-        
+                    current_prob = query_pdf
+
+            expectation_vector[key] = current_class     
 
         return image_vector, expectation_vector
 
@@ -89,16 +106,17 @@ class EM:
         classes, and then returns an updated tuple of means
         and an updated tuple of stadard deviations. 
 
-        @param image_vector:  A numpy array containing the 
-                              image pixel values in vector 
-                              form. 
+        @param image_vector:  
+                A numpy array containing the image pixel values 
+                in vector form. 
 
-        @param expectation_vector: A numpy vector containing 
-                              the current most likely pixel 
-                              classes for each pixel. 
+        @param expectation_vector: 
+                A numpy vector containing the current most 
+                likely pixel classes for each pixel. 
 
-        @returns means:       The updated means.
-        @returns stds:        The updated standard deviations
+
+        @returns 
+                The updated means and updated standard deviations
         """ 
 
         store_dict = {}
@@ -106,14 +124,18 @@ class EM:
         for key, val in enumerate(expectation_vector):
 
             if val in store_dict:
+
                 store_dict[val].append(int(image_vector[key]))
+
             else:
+
                 store_dict[val] = [int(image_vector[key])]
 
         means = []
         stds = []
 
         for i in store_dict:
+
             means.append(sum(store_dict[i])/len(store_dict[i]))
             stds.append(np.std(np.asarray(store_dict[i])))
 
@@ -126,11 +148,11 @@ class EM:
         """
         Loads in the image with basic error handling. 
 
-        @param file_locataion: The full or relative path 
-                               of the file location.
+        @param file_locataion: 
+                The full or relative path of the file location.
 
-        @returns image:        The image as a 2D numpy 
-                               array.  
+        @returns
+                The image as a 2D numpy array.  
         """
 
         try:
@@ -147,14 +169,14 @@ class EM:
     def _CalcPriors(priors): 
 
         """
-        Given a tuple of paths to files, this method 
-        calculates the bayesian priors. 
+        Given a tuple of paths to files, this method calculates 
+        the bayesian priors. 
 
-        @param priors:  Tuple containing paths to 
-                        prior files.  
+        @param priors:  
+                Tuple containing paths to prior files.  
 
-        @returns means: The prior means.
-        @returns stds:  The prior standard deviations
+        @returns 
+                The prior means and standard deviations. 
         """
 
         pass
@@ -171,19 +193,30 @@ class EM:
         Overloading the __call__ method, so that an instantiated
         class can be called to run the EM algorithm. 
 
-        @param file_location: The file location of the image to 
-                              be segmented. can be full or relative. 
-        @param convergence_ratio: The difference between sucsessive 
-                                  runs of the EM algorithm.
-        @param no_means:       The number of classes to segment 
-                               into. 
-        @param priors:         Tuple of file locations of the 
-                               prior files. None if there are no 
-                               priors. 
-        @param initial_means:  Starting point for the algorithm
-        @param initial_stds:   The starting standard deviations
+        @param file_location: 
+                The file location of the image to be segmented. 
+                Can be full or relative. 
 
-        @returns The final calculated means and standard deviations. 
+        @param convergence_ratio: 
+                The difference between sucsessive runs of the 
+                EM algorithm.
+
+        @param no_means:       
+                The number of classes to segment into. 
+
+        @param priors:
+                Tuple of file locations of the prior files. None 
+                if there are no priors. 
+
+        @param initial_means:  
+                Starting point for the algorithm
+
+        @param initial_stds:   
+                The starting standard deviations
+
+
+        @returns 
+            The final calculated means and standard deviations. 
 
         """
 
@@ -198,7 +231,9 @@ class EM:
 
         while True: 
 
-            new_means, new_stds = EM._Maximisation(*EM._Expectation(image, no_means, means,stds))
+            expectation = EM._Expectation(image, no_means, means,stds)
+            new_means, new_stds = EM._Maximisation(*expectation)
+            
             if all([(means[i]/new_means[i])-1 < convergence_ratio for i in range(len(new_means))]):
                 break
             means = new_means
