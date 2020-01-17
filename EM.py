@@ -6,22 +6,56 @@ import math
 class EM:
 
     """
+    This class contains various methods relating to the 
+    Expectation-Maximisation (EM) algorithm. 
 
+    @author Luke Jenkinson
     """
+
+
 
     @staticmethod
     def _GaussianEquasion(value, mean, std):
-         first_part = 1/(std * math.sqrt(2*math.pi))
-         second_part = math.e ** (-0.5*((value-mean)/std)**2)
 
-         return first_part*second_part
+        """
+        This method calculates the probablity density value
+        at a given value, with a known mean and known standard
+        deviation. This is an implimentation of the Equasion 
+        found: https://en.wikipedia.org/wiki/Normal_distribution
+
+        @param value:   Query value
+        @param mean:    The mean of the distribution
+        @param std:     The standard deviation of the distribution
+
+        @returns        The PDF value at the query value. 
+        """
+
+        first_part = 1/(std * math.sqrt(2*math.pi))
+        second_part = math.e ** (-0.5*((value-mean)/std)**2)
+
+        return first_part*second_part
 
 
     @staticmethod
     def _Expectation(image, number_of_classes, averages, stds):
 
         """
-        Implimentation of the Expectation-Maximisation algorithm.
+        Implimentation of the Expectation section of the EM
+        algorithm. This method calculates which classes the 
+        image pixels most likely belong to, given the current 
+        means (averages) and their relevent standard deviations. 
+
+        @param image:   A numpy array containing the image pixel 
+                        values as a 2D array. 
+        @param number_of_classes:  The number of classes to segment 
+                        the image into. 
+        @param averages: a tuple containing the current means
+        @param stds:    A tuple containing the current standard 
+                        deviations. 
+
+        @returns expectation_vector: A numpy vector containing 
+                        the current most likely pixel classes 
+                        for each pixel. 
         """
 
         image_shape = np.shape(image)
@@ -47,7 +81,25 @@ class EM:
 
 
     @staticmethod
-    def _Maximisation(image_vector, expectation_vector): 
+    def _Maximisation(image_vector, expectation_vector):
+
+        """
+        The maximisation part of the algorithm. This method
+        takes the image vector and the currently assinged 
+        classes, and then returns an updated tuple of means
+        and an updated tuple of stadard deviations. 
+
+        @param image_vector:  A numpy array containing the 
+                              image pixel values in vector 
+                              form. 
+
+        @param expectation_vector: A numpy vector containing 
+                              the current most likely pixel 
+                              classes for each pixel. 
+
+        @returns means:       The updated means.
+        @returns stds:        The updated standard deviations
+        """ 
 
         store_dict = {}
 
@@ -71,6 +123,16 @@ class EM:
     @staticmethod
     def _LoadImage(file_location):
 
+        """
+        Loads in the image with basic error handling. 
+
+        @param file_locataion: The full or relative path 
+                               of the file location.
+
+        @returns image:        The image as a 2D numpy 
+                               array.  
+        """
+
         try:
 
             image = imageio.imread(file_location)
@@ -82,11 +144,57 @@ class EM:
         return image
 
 
-    def __call__(self, file_location, convergence_ratio, no_means = 4, initial_means = (50,100,150,200), initial_stds = (10,10,10,10)):
+    def _CalcPriors(priors): 
+
+        """
+        Given a tuple of paths to files, this method 
+        calculates the bayesian priors. 
+
+        @param priors:  Tuple containing paths to 
+                        prior files.  
+
+        @returns means: The prior means.
+        @returns stds:  The prior standard deviations
+        """
+
+        pass
+
+    def __call__(self, 
+        file_location, 
+        convergence_ratio, 
+        no_means = 4, 
+        priors = None, 
+        initial_means = (50,100,150,200), 
+        initial_stds = (10,10,10,10)):
+
+        """
+        Overloading the __call__ method, so that an instantiated
+        class can be called to run the EM algorithm. 
+
+        @param file_location: The file location of the image to 
+                              be segmented. can be full or relative. 
+        @param convergence_ratio: The difference between sucsessive 
+                                  runs of the EM algorithm.
+        @param no_means:       The number of classes to segment 
+                               into. 
+        @param priors:         Tuple of file locations of the 
+                               prior files. None if there are no 
+                               priors. 
+        @param initial_means:  Starting point for the algorithm
+        @param initial_stds:   The starting standard deviations
+
+        @returns The final calculated means and standard deviations. 
+
+        """
 
         image = EM._LoadImage(file_location)
 
-        means, stds = initial_means, initial_stds
+        if priors is not None: 
+
+            means, stds = _CalcPriors(priors)
+
+        else:
+            means, stds = initial_means, initial_stds
 
         while True: 
 
@@ -100,14 +208,8 @@ class EM:
         return means, stds
 
 
-
-
-
-
-
-
 if __name__ == "__main__":
 
-    m, std = EM()("/home/luke/TAWork/Data/brain_noise.png", 0.001)
+    m, std = EM()("/home/luke/TAWork/IPMI-TA-work/Data/brain.png", 0.001)
 
    
