@@ -155,31 +155,57 @@ class EM:
                 The image as a 2D numpy array.  
         """
 
-        try:
+        #try:
 
-            image = imageio.imread(file_location)
+        image = imageio.imread(file_location)
 
-        except:
+        #except Exception as e:
 
-            raise IOError("Could not read in image")
+        #    print(e)
+        #    raise IOError("Could not read in image")
 
         return image
 
 
-    def _CalcPriors(priors): 
+    @staticmethod
+    def _CalcPriors(priors, image): 
 
         """
         Given a tuple of paths to files, this method calculates 
         the bayesian priors. 
 
         @param priors:  
-                Tuple containing paths to prior files.  
+                Tuple containing paths to prior files.
+
+        @param image:
+                The file location of the image to be segmented. 
+                Can be full or relative.
+
 
         @returns 
                 The prior means and standard deviations. 
         """
+        prior_images = []
+        image_vector = image.reshape(image.shape[0]*image.shape[1])
 
-        pass
+        for i in priors:
+
+            prior = EM._LoadImage(i)
+            prior_vector = image.reshape(prior.shape[0]*prior.shape[1])
+            prior_images.append(prior_vector)
+
+        means = []
+        stds = []
+
+        for i in prior_images: 
+
+            print(i)
+            mean, std = EM._Maximisation(image_vector, i)
+            print(mean)
+            means.append(mean)
+            stds.append(std)
+
+        return means,stds
 
     def __call__(self, 
         file_location, 
@@ -220,20 +246,24 @@ class EM:
 
         """
 
-        image = EM._LoadImage(file_location)
+        image = self._LoadImage(file_location)
 
         if priors is not None: 
 
-            means, stds = _CalcPriors(priors)
+            print(priors)
+
+            means, stds = self._CalcPriors(priors, image)
 
         else:
             means, stds = initial_means, initial_stds
+
+        print(means)
 
         while True: 
 
             expectation = EM._Expectation(image, no_means, means,stds)
             new_means, new_stds = EM._Maximisation(*expectation)
-            
+
             if all([(means[i]/new_means[i])-1 < convergence_ratio for i in range(len(new_means))]):
                 break
             means = new_means
@@ -245,6 +275,10 @@ class EM:
 
 if __name__ == "__main__":
 
-    m, std = EM()("/home/luke/TAWork/IPMI-TA-work/Data/brain.png", 0.001)
+    m, std = EM()("/home/luke/TAWork/IPMI-TA-work/Data/brain.png", 0.001, 
+        priors = ["/home/luke/TAWork/IPMI-TA-work/Data/WM_prior.png",
+        "/home/luke/TAWork/IPMI-TA-work/Data/brain_bias.png", 
+        "/home/luke/TAWork/IPMI-TA-work/Data/GM_prior.png",
+        "/home/luke/TAWork/IPMI-TA-work/Data/NonBrain_prior.png"])
 
    
